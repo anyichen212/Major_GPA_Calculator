@@ -4,42 +4,73 @@ import React, { useState } from 'react';
 
 import extractTextFromPDF from "pdf-parser-client-side";
 
+import { GpaScore } from './components/GpaScore';
+
 function App() {
   const [averageGPA, setAverageGPA] = useState(null);
+  const [fileName, setFileName] = useState("")
+
   return (
-    <div>
-      <input
-        type="file"
-        name=""
-        id="file-selector"
-        accept=".pdf"
-        onChange={(e) => {
-          // Selecting the first file
-          const file = e.target.files[0];
-          //   If file exists then we will call our function
-          if (file) {
-            extractTextFromPDF(file).then((data) => {
-              const result = extractClassesCreditsGrades(data);
-              console.log(result);
-              const avgGPA = calculateAverageGPA(result.classes);
-              console.log('Average GPA for CSC, CS, CISC classes:', avgGPA);
-              setAverageGPA(avgGPA);
-            });
-          }
-        }}
-      />
+    <div className='App'>
+
+      <h1 className="Title">CUNY CS Major GPA Calculator</h1>
+      <h4 className="Note">Disclaimer: Only tested with the following CUNY's transcript</h4>
+      <h4 className="Note">(Brooklyn College, John Jay College, and Medgar Evers college)</h4>
+      
+      <label htmlFor="file-selector" className="file-selector"> 
+        <div className="boxUL bold">Upload Transcript File (.pdf)</div>
+        <div>File Name : {fileName ? fileName : "N/A"}</div>
+        <input
+          type="file"
+          name=""
+          id="file-selector"
+          accept=".pdf"
+          onChange={(e) => {
+            // Selecting the first file
+            const file = e.target.files[0];
+            //   If file exists then we will call our function
+            if (file) {
+              extractTextFromPDF(file).then((data) => {
+                setFileName(file.name)
+                const result = extractClassesCreditsGrades(data);
+                console.log(result);
+                const avgGPA = calculateAverageGPA(result.classes);
+                console.log('Average GPA for CSC, CS, CISC classes:', avgGPA);
+                setAverageGPA(avgGPA);
+              });
+            }
+          }}
+        />
+      </label>
+
+      {averageGPA && <GpaScore averageGPA={averageGPA} />}
       <div>Average GPA for CSC, CS, CISC classes: {averageGPA}</div>
+      
     </div>
   );
 }
-const classPattern = /\b([A-Z]+\s\d+)\s+(.+?)\s+(\d+\.\d+)\s+(\w+)\b/g;
+
+// regEx pattern to match and push into array
+// [A-Z]+ -> 1 or more char from A-Z, 
+// \.? -> optional '.',
+// \s -> space
+// d+ -> 1 or more digit
+// 
+// \s+ -> 1 or more space
+// (\d+\.\d+) -> one or more digit + . + one or more digit
+// \s+
+// (\w+) -> one or more char(a-z, A-Z, 1-9, and _ )
+const classPattern = /\b([A-Z]+\.?\s\d+)\s+(.+?)\s+(\d+\.\d+)\s+(\w+\+?\-?)/g;
 const cumulativeTotalsPattern = /Cumulative Totals.*?Cum GPA:\s+(\d+\.\d+)\s+.*?Cum Total:\s+(\d+\.\d+)\s+(\d+\.\d+)/s;
 
 function extractClassesCreditsGrades(data) {
+  // cut off everything before "Beginning of Undergraduate Record"
+  const data2 = data.split("Beginning of Undergraduate Record")[1]
+  console.log(data2)
   const classes = [];
   let match;
 
-  while ((match = classPattern.exec(data)) !== null) {
+  while ((match = classPattern.exec(data2)) !== null) {
     const [, classInfo, description, credits, grade] = match;
     classes.push({ class: classInfo, description, credits, grade });
   }
