@@ -17,7 +17,8 @@ function App() {
           //   If file exists then we will call our function
           if (file) {
             extractTextFromPDF(file).then((data) => {
-              console.log(data);
+              const result = extractClassesCreditsGrades(data);
+              console.log(result);
             });
           }
         }}
@@ -25,7 +26,25 @@ function App() {
     </div>
   );
 }
-   
+const classPattern = /\b([A-Z]+\s\d+)\s+(.+?)\s+(\d+\.\d+)\s+(\w+)\b/g;
+const cumulativeTotalsPattern = /Cumulative Totals.*?Cum GPA:\s+(\d+\.\d+)\s+.*?Cum Total:\s+(\d+\.\d+)\s+(\d+\.\d+)/s;
+
+function extractClassesCreditsGrades(data) {
+  const classes = [];
+  let match;
+
+  
+  while ((match = classPattern.exec(data)) !== null) {
+    const [, classInfo, description, credits, grade] = match;
+    classes.push({ class: classInfo, description, credits, grade });
+  }
+
+  // Match cumulative totals
+  const cumulativeTotalsMatch = cumulativeTotalsPattern.exec(data);
+  const [, cumGPA, cumTotal, transferTotal] = cumulativeTotalsMatch;
+
+  return { classes, cumulativeTotals: { cumGPA, cumTotal, transferTotal } };
+}
 
 
 
