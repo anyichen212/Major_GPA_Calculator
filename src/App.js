@@ -44,7 +44,7 @@ function App() {
       </label>
 
       {averageGPA && <GpaScore averageGPA={averageGPA} />}
-      <div>Average GPA for CSC, CS, CISC classes: {averageGPA}</div>
+      <div>Average GPA for CSC, CS, CISC, MTH, MATH, MAT classes: {averageGPA}</div>
       
     </div>
   );
@@ -85,6 +85,8 @@ function extractClassesCreditsGrades(data) {
 // Function to calculate GPA from letter grade
 function calculateGPA(letterGrade) {
   switch (letterGrade) {
+    case 'A+':
+      return 4.0;
     case 'A':
       return 4.0;
     case 'A-':
@@ -105,8 +107,10 @@ function calculateGPA(letterGrade) {
       return 1.3;
     case 'D':
       return 1.0;
+    case 'F':
+      return 0.0;  
     default:
-      return 0.0; // E&F or other grades
+      return null; 
   }
 }
 
@@ -120,7 +124,9 @@ function calculateAverageGPA(classes) {
     const { class: className, credits, grade } = classInfo;
 
     // Check if the class has a specific prefix
-    if (className.startsWith('CSC') || className.startsWith('CS') || className.startsWith('CISC')) {
+    if ((className.startsWith('CSC') || className.startsWith('CS') || className.startsWith('CISC')|| className.startsWith('MTH')|| className.startsWith('MAT')) 
+        || className.startsWith('MATH')&& grade != "CR" )
+      {
       const classGPA = calculateGPA(grade);
       const classCredits = parseFloat(credits);
       console.log(className,classGPA,classCredits);
