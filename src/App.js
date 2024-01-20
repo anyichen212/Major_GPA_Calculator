@@ -8,6 +8,7 @@ import { GpaScore } from './components/GpaScore';
 
 function App() {
   const [averageGPA, setAverageGPA] = useState(null);
+  const [allclasses, setallclasses] = useState([]);
   const [fileName, setFileName] = useState("")
 
   return (
@@ -37,6 +38,7 @@ function App() {
                 const avgGPA = calculateAverageGPA(result.classes);
                 console.log('Average GPA for CSC, CS, CISC classes:', avgGPA);
                 setAverageGPA(avgGPA);
+                setallclasses(result.classes)
               });
             }
           }}
@@ -45,7 +47,10 @@ function App() {
 
       {averageGPA && <GpaScore averageGPA={averageGPA} />}
       <div>Average GPA for CSC, CS, CISC, MTH, MATH, MAT classes: {averageGPA}</div>
-      
+      {allclasses.map(item => {
+        if (item?.class.match("(CS|CISC|MTH|MAT|CSC).*"))
+          return <div>{item?.class} {item?.description} {item?.grade}</div>;
+        })}
     </div>
   );
 }
@@ -130,6 +135,7 @@ function calculateAverageGPA(classes) {
       const classGPA = calculateGPA(grade);
       const classCredits = parseFloat(credits);
       console.log(className,classGPA,classCredits);
+
       totalGPA += classGPA * classCredits;
       totalCredits += classCredits;
     }
