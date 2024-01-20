@@ -6,8 +6,11 @@ import extractTextFromPDF from "pdf-parser-client-side";
 
 function App() {
   const [averageGPA, setAverageGPA] = useState(null);
+  const [classesss,setClasses]=useState([]);
+  
   return (
     <div>
+      
       <input
         type="file"
         name=""
@@ -20,15 +23,18 @@ function App() {
           if (file) {
             extractTextFromPDF(file).then((data) => {
               const result = extractClassesCreditsGrades(data);
-              console.log(result);
+              console.log("result",result);
               const avgGPA = calculateAverageGPA(result.classes);
               console.log('Average GPA for CSC, CS, CISC classes:', avgGPA);
               setAverageGPA(avgGPA);
+              setClasses(result.classes);
+              
             });
           }
         }}
       />
       <div>Average GPA for CSC, CS, CISC classes: {averageGPA}</div>
+      <div>{classesss[0]?.class}</div>
     </div>
   );
 }
@@ -54,7 +60,7 @@ function extractClassesCreditsGrades(data) {
 // Function to calculate GPA from letter grade
 function calculateGPA(letterGrade) {
   switch (letterGrade) {
-    case 'A':
+    case 'A' || 'A+':
       return 4.0;
     case 'A-':
       return 3.7;
