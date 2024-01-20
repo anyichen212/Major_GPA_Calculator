@@ -6,10 +6,13 @@ import extractTextFromPDF from "pdf-parser-client-side";
 
 import { GpaScore } from './components/GpaScore';
 
+
+
 function App() {
   const [averageGPA, setAverageGPA] = useState(null);
   const [allclasses, setallclasses] = useState([]);
   const [fileName, setFileName] = useState("")
+  const [collegename, setCollegename] = useState("")
 
   return (
     <div className='App'>
@@ -39,18 +42,21 @@ function App() {
                 console.log('Average GPA for CSC, CS, CISC classes:', avgGPA);
                 setAverageGPA(avgGPA);
                 setallclasses(result.classes)
+                
+                
               });
             }
           }}
         />
       </label>
-
+      {collegename + "College"}    
       {averageGPA && <GpaScore averageGPA={averageGPA} />}
       <div>Average GPA for CSC, CS, CISC, MTH, MATH, MAT classes: {averageGPA}</div>
       {allclasses.map(item => {
         if (item?.class.match("(CS|CISC|MTH|MAT|CSC).*"))
-          return <div>{item?.class} {item?.description} {item?.grade}</div>;
+          return <div>{item?.class} {item?.description} {item?.credits} {item?.grade}</div>;
         })}
+      
     </div>
   );
 }
@@ -65,17 +71,22 @@ function App() {
 // (\d+\.\d+) -> one or more digit + . + one or more digit
 // \s+
 // (\w+) -> one or more char(a-z, A-Z, 1-9, and _ )
+
 const classPattern = /\b([A-Z]+\.?\s\d+)\s+(.+?)\s+(\d+\.\d+)\s+(\w+\+?\-?)/g;
 const cumulativeTotalsPattern = /Cumulative Totals.*?Cum GPA:\s+(\d+\.\d+)\s+.*?Cum Total:\s+(\d+\.\d+)\s+(\d+\.\d+)/s;
 
 function extractClassesCreditsGrades(data) {
   // cut off everything before "Beginning of Undergraduate Record"
-  const data2 = data.split("Beginning of Undergraduate Record")[1]
+  const data2 = data.split("Beginning of Undergraduate Record")
+  console.log(data.split("Beginning of Undergraduate Record")[0])
   console.log(data2)
   const classes = [];
   let match;
+  const collegeMatch = /\b(Brooklyn|Medgar Evers) Student\b/g.exec(data2[0])
+  console.log(collegeMatch) 
+  setCollegename(collegeMatch[1])
 
-  while ((match = classPattern.exec(data2)) !== null) {
+  while ((match = classPattern.exec(data2[1])) !== null) {
     const [, classInfo, description, credits, grade] = match;
     classes.push({ class: classInfo, description, credits, grade });
   }
