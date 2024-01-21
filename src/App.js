@@ -1,8 +1,7 @@
 import './App.css';
-import React, { useState } from 'react';
-
+import React, { useState, PureComponent } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import extractTextFromPDF from "pdf-parser-client-side";
-
 import { GpaScore } from './components/GpaScore';
 
 
@@ -10,11 +9,15 @@ import { GpaScore } from './components/GpaScore';
 function App() {
   const [averageGPA, setAverageGPA] = useState(null);
   const [allclasses, setallclasses] = useState([]);
+  // const [chartclasses, setChartclasses] = useState([]);
   const [fileName, setFileName] = useState("")
   const [collegename, setCollegename] = useState("None")
   const [cumulativetot, setCumlativetot] = useState("")
   const [studentName,setStudentName]=useState("None");
+  const [chart,setChart]=useState([])
+  const ChartClasses=[];
 
+  
   // regEx pattern to match and push into array
   // [A-Z]+ -> 1 or more char from A-Z, 
   // \.? -> optional '.',
@@ -61,6 +64,10 @@ function App() {
     setCumlativetot(cumGPA)
 
     return { classes, cumulativeTotals: { cumGPA, cumTotal, transferTotal } };
+  }
+  function arrayADD( Cname, Cgpa ){
+    const obj={name:Cname,avg:Cgpa}
+    ChartClasses.push(obj);
   }
 
   // Function to calculate GPA from letter grade
@@ -114,12 +121,14 @@ function App() {
 
         totalGPA += classGPA * classCredits;
         totalCredits += classCredits;
+        arrayADD(className,parseFloat((totalGPA / totalCredits).toFixed(2)))
       }
     });
 
     // Calculate average GPA
     const averageGPA = totalCredits > 0 ? totalGPA / totalCredits : 0.0;
-
+    console.log(ChartClasses)
+    setChart(ChartClasses);
     return averageGPA.toFixed(2); // Return average GPA rounded to 2 decimal places
   }
 
@@ -150,10 +159,7 @@ function App() {
                 const avgGPA = calculateAverageGPA(result.classes);
                 console.log('Average GPA for CSC, CS, CISC classes:', avgGPA);
                 setAverageGPA(avgGPA);
-                setallclasses(result.classes)
-              
-                
-                
+                setallclasses(result.classes);
               });
             }
           }}
@@ -177,9 +183,24 @@ function App() {
       );
     }
   })}
-      
+  <h3 style={{marginTop:"2vh"}}>Students Progression thought the major classes.</h3>
+    <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center',marginTop:"2vh" }}>
+  <LineChart
+    width={800} 
+    height={400} 
+    data={chart}
+    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+  >
+    <CartesianGrid strokeDasharray="3 3" />
+    <XAxis dataKey="name" />
+    <YAxis />
+    <Tooltip />
+    <Legend />
+    <Line type="monotone" dataKey="avg" stroke="#8884d8" activeDot={{ r: 8 }} />
+  </LineChart>
+  </div>
     </div>
   );
 }
 
-export default App;
+export default App ;
