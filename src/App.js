@@ -1,23 +1,24 @@
 import './App.css';
-import React, { useState, PureComponent } from 'react';
+import React, { useState, PureComponent, Fragment } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
 import extractTextFromPDF from "pdf-parser-client-side";
+
 import { GpaScore } from './components/GpaScore';
+import AllClassContainer from './components/AllClassContainer';
 
 
 
 function App() {
-  const [averageGPA, setAverageGPA] = useState(null);
+  const [averageGPA, setAverageGPA] = useState(0);
   const [allclasses, setallclasses] = useState([]);
-  // const [chartclasses, setChartclasses] = useState([]);
   const [fileName, setFileName] = useState("")
-  const [collegename, setCollegename] = useState("None")
+  const [collegename, setCollegename] = useState("")
   const [cumulativetot, setCumlativetot] = useState("")
   const [studentName,setStudentName]=useState("None");
   const [chart,setChart]=useState([])
   const ChartClasses=[];
 
-  
   // regEx pattern to match and push into array
   // [A-Z]+ -> 1 or more char from A-Z, 
   // \.? -> optional '.',
@@ -28,29 +29,36 @@ function App() {
   // (\d+\.\d+) -> one or more digit + . + one or more digit
   // \s+
   // (\w+) -> one or more char(a-z, A-Z, 1-9, and _ )
-
   const classPattern = /\b([A-Z]+\.?\s\d+)\s+(.+?)\s+(\d+\.\d+)\s+(\w+\+?\-?)/g;
   const cumulativeTotalsPattern = /Cumulative Totals.*?Cum GPA:\s+(\d+\.\d+)\s+.*?Cum Total:\s+(\d+\.\d+)\s+(\d+\.\d+)/s;
-  
+
   function extractClassesCreditsGrades(data) {
     // cut off everything before "Beginning of Undergraduate Record"
     const data2 = data.split("Beginning of Undergraduate Record")
-    const beggining=data.split("Beginning of Undergraduate Record")[0];
     const nameRegex = /Name:\s+(.*)\s+Student ID:/;
-    const matchName = beggining.match(nameRegex);
+    const matchName = data2[0].match(nameRegex);
     const studentName = matchName && matchName[1];
     setStudentName(studentName);
+
     const classes = [];
     let match;
     const collegeMatch = /\b(Brooklyn|Medgar Evers|COSI) Student\b/g.exec(data2[0])
-    
     console.log(collegeMatch) 
-    if(collegeMatch[1]=="COSI"){
-      setCollegename("College of Staten Island");
+
+    //if no match exit and stop running
+    if(collegeMatch){
+      switch(collegeMatch[1]){
+        case 'COSI':
+          setCollegename("College Of Staten Island")
+          break;
+
+        default:
+          setCollegename(collegeMatch[1]+" College")
+      }
+    } else {
+      return
     }
-    else{
-    setCollegename(collegeMatch[1])
-    }
+      
 
     while ((match = classPattern.exec(data2[1])) !== null) {
       const [, classInfo, description, credits, grade] = match;
@@ -65,8 +73,9 @@ function App() {
 
     return { classes, cumulativeTotals: { cumGPA, cumTotal, transferTotal } };
   }
-  function arrayADD( Cname, Cgpa ){
-    const obj={name:Cname,avg:Cgpa}
+
+  function arrayADD( Cname, Cgpa , Cgpa2 ){
+    const obj={name:Cname,avg:Cgpa,score:Cgpa2}
     ChartClasses.push(obj);
   }
 
@@ -98,7 +107,7 @@ function App() {
       case 'F':
         return 0.0;  
       default:
-        return null; 
+        return 0.0; 
     }
   }
 
@@ -112,18 +121,21 @@ function App() {
       const { class: className, credits, grade } = classInfo;
 
       // Check if the class has a specific prefix
-      if ((className.startsWith('CSC') || className.startsWith('CS') || className.startsWith('CISC')|| className.startsWith('MTH')|| className.startsWith('MAT')) 
-          || className.startsWith('MATH')&& grade != "CR" )
+      if ((className.startsWith('CSC') || className.startsWith('CS') || className.startsWith('CISC')|| className.startsWith('MTH')|| className.startsWith('MAT') || className.startsWith('MATH')) 
+      && grade != "CR" &&  grade != "Contact")
         {
         const classGPA = calculateGPA(grade);
         const classCredits = parseFloat(credits);
-        console.log(className,classGPA,classCredits);
+        //console.log(className,classGPA,classCredits);
 
         totalGPA += classGPA * classCredits;
         totalCredits += classCredits;
-        arrayADD(className,parseFloat((totalGPA / totalCredits).toFixed(2)))
+        arrayADD(className,parseFloat((totalGPA / totalCredits).toFixed(2)), parseFloat(classGPA.toFixed(2)))
       }
     });
+
+    //console.log("credit", totalCredits)
+    //console.log("credit", totalGPA)
 
     // Calculate average GPA
     const averageGPA = totalCredits > 0 ? totalGPA / totalCredits : 0.0;
@@ -136,8 +148,6 @@ function App() {
     <div className='App'>
 
       <h1 className="Title">CUNY CS Major GPA Calculator</h1>
-      <h4 className="Note">Disclaimer: Only tested with the following CUNY's transcript</h4>
-      <h4 className="Note">(Brooklyn College, College of Staten Island, John Jay College, and Medgar Evers college)</h4>
       
       <label htmlFor="file-selector" className="file-selector"> 
         <div className="boxUL bold">Upload Transcript File (.pdf)</div>
@@ -153,54 +163,65 @@ function App() {
             //   If file exists then we will call our function
             if (file) {
               extractTextFromPDF(file).then((data) => {
-                setFileName(file.name)
                 const result = extractClassesCreditsGrades(data);
-                console.log(result);
+                if(!result || !file.type.endsWith('pdf')){
+                  alert("Invalid File.\nPlease make sure the file you attempt to upload is a PDF file and a CUNY unofficial transcript.")
+                  return
+                }
+                  
+
+                setFileName(file.name)
                 const avgGPA = calculateAverageGPA(result.classes);
-                console.log('Average GPA for CSC, CS, CISC classes:', avgGPA);
                 setAverageGPA(avgGPA);
-                setallclasses(result.classes);
+                setallclasses(result.classes)
+              
+                
+                
               });
             }
           }}
         />
-      </label>
-       <div>College: {collegename}  </div>
-       <div>Student Name: {studentName}</div>
-      {averageGPA && <GpaScore averageGPA={averageGPA} />}
-      
-      
-      <div className="MajorGPAScore">Your Overall GPA is: {cumulativetot}</div>
+      </label> 
 
-      {allclasses.map(item => {
-    if (item?.class.match("(CS|CISC|MTH|MAT|CSC).*")) {
-      return (
-        <div key={item?.class} style={{ display: 'flex', justifyContent: 'space-between', width: 500,margin: '0 auto'}}>
-          <span>{item?.class}</span>
-          <span>{item?.description}</span>
-          <span>{item?.grade}</span>
-        </div>
-      );
-    }
-  })}
-  <h3 style={{marginTop:"2vh"}}>Students Progression thought the major classes.</h3>
-    <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center',marginTop:"2vh" }}>
-  <LineChart
-    width={800} 
-    height={400} 
-    data={chart}
-    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-  >
-    <CartesianGrid strokeDasharray="3 3" />
-    <XAxis dataKey="name" />
-    <YAxis />
-    <Tooltip />
-    <Legend />
-    <Line type="monotone" dataKey="avg" stroke="#8884d8" activeDot={{ r: 8 }} />
-  </LineChart>
-  </div>
+      <h4 className="Note">Disclaimer: Only tested with the following CUNY transcript</h4>
+      <h4 className="Note">(Brooklyn College, College of Staten Island, and Medgar Evers college)</h4>
+      
+
+      {averageGPA !== 0 && <GpaScore 
+        averageGPA={averageGPA} 
+        college={collegename} 
+        cumGPA={cumulativetot} 
+        studentName={studentName}
+          
+        />}
+
+      { allclasses.length > 0 && 
+        <Fragment>
+          <h3 style={{marginTop:"50px", marginBottom:"0"}}>Major Class Progression</h3>
+          <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center',marginTop:"2vh", padding:"10px 0 30px 0" }}>
+            <ResponsiveContainer width="95%" height={300}>
+              <LineChart
+                data={chart}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                style={{maxWidth:"90vw"}}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="avg" name='Average Grade' stroke="#8884d8" activeDot={{ r: 8 }} />
+                <Line type="monotone" dataKey="score" name='Class Grade' stroke="#028282" activeDot={{ r: 8 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </Fragment>
+      }
+        
+
+      {allclasses.length > 0 && <AllClassContainer allClasses={allclasses} />}
+
     </div>
   );
 }
 
-export default App ;
+export default App;
