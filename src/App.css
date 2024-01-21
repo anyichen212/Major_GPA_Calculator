@@ -1,15 +1,16 @@
 .App {
   text-align: center;
   min-height: calc(100vh - 50px);
-  background-color: lightgray;
+  background-color: #ecf1f3;
+  color: #122e4f;
   margin: 0;
 }
 
 /* underline a whole div box */
 .boxUL {
-  border-bottom: 2px solid black;
-  padding: 10px;
-  width: 90%;
+  border-bottom: 2px dashed;
+  padding: 9px;
+  width: 92%;
 }
 
 /* bold words */
@@ -19,7 +20,7 @@
 
 /* note designs */
 .Note {
-  color: darkcyan;
+  color: rgb(2, 130, 130);
   font-weight: normal;
 
   margin: 0;
@@ -36,12 +37,13 @@
   display: inline-block;
   text-align: center;
   cursor: pointer;
-  background-color: darkcyan;
+  background-color: #4074af;
+  color: #c6d5f0;
   width: 50vw;
   margin: 20px 0;
   min-height: fit-content;
   height: 70px;
-  border: 3px dotted black;
+  border: 3px double #122e4f;
   border-radius: 10px;
 }
 
@@ -50,7 +52,8 @@
 }
 
 .file-selector:hover {
-  background-color: gray;
+  background-color: #9db1d4;
+  color: #122e4f;
 }
 
 input[type="file"] {
@@ -72,6 +75,100 @@ input[type="file"] {
   font-size: xx-large;
   font-weight: bolder;
   margin: 10px;
+}
+
+/* class containers */
+.AllClassContainer {
+  display: flex;
+  flex-direction: column;
+  width: 80%;
+  margin: auto;
+}
+
+.class1, .class2 {
+  display: flex;
+  font-size: large;
+  padding: 10px 5px;
+  margin: 6px;
+  border-radius: 10px;
+  min-height: 40px;
+}
+
+.class1 {
+  background-color: #4074af;
+  color: #c6d5f0;
+}
+
+.class2 {
+  background-color: #9db1d4;
+}
+
+.class_name {
+  font-weight: bold;
+  width: 20%;
+  margin: auto 15px;
+}
+
+.class_description {
+  width: 40%;
+  margin: auto;
+}
+
+.class_credit {
+  width: 20%;
+  margin: auto 0;
+}
+
+.class_grade {
+  font-weight: bold;
+  width: 20%;
+  margin: auto 0;
+}
+
+.creditEarn {
+  display: none;
+}
+
+/* mobile design */
+@media only screen and (max-width: 600px) {
+  .classHeader {
+    display: none;
+  }
+
+  .class1, .class2 {
+    flex-wrap: wrap;
+  }
+
+  .class_name {
+    border-bottom: 2px dashed;
+    width: 100%;
+  }
+  
+  .class_description {
+    width: 100%;
+  }
+
+  .creditEarn {
+    display: block;
+    font-weight: bold;
+    text-align: left;
+    width: calc(35%-9px);
+    margin: auto 0;
+    padding-left: 8px;
+  }
+  
+  .class_credit {
+    font-weight: bold;
+    width: 30%;
+    margin: 5px 0;
+    text-align: right;
+  }
+  
+  .class_grade {
+    width: 35%;
+    margin: 5px 0;
+  }
+  
 }
 
 .Footer{

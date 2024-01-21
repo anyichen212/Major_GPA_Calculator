@@ -4,11 +4,12 @@ import React, { useState } from 'react';
 import extractTextFromPDF from "pdf-parser-client-side";
 
 import { GpaScore } from './components/GpaScore';
+import AllClassContainer from './components/AllClassContainer';
 
 
 
 function App() {
-  const [averageGPA, setAverageGPA] = useState(null);
+  const [averageGPA, setAverageGPA] = useState(0);
   const [allclasses, setallclasses] = useState([]);
   const [fileName, setFileName] = useState("")
   const [collegename, setCollegename] = useState("")
@@ -35,9 +36,23 @@ function App() {
     console.log(data2)
     const classes = [];
     let match;
-    const collegeMatch = /\b(Brooklyn|Medgar Evers) Student\b/g.exec(data2[0])
+    const collegeMatch = /\b(Brooklyn|Medgar Evers|COSI) Student\b/g.exec(data2[0])
     console.log(collegeMatch) 
-    setCollegename(collegeMatch[1])
+
+    //if no match exit and stop running
+    if(collegeMatch){
+      switch(collegeMatch[1]){
+        case 'COSI':
+          setCollegename("College Of Staten Island")
+          break;
+          
+        default:
+          setCollegename(collegeMatch[1]+" College")
+      }
+    } else {
+      return
+    }
+      
 
     while ((match = classPattern.exec(data2[1])) !== null) {
       const [, classInfo, description, credits, grade] = match;
@@ -81,7 +96,7 @@ function App() {
       case 'F':
         return 0.0;  
       default:
-        return null; 
+        return 0.0; 
     }
   }
 
@@ -95,17 +110,20 @@ function App() {
       const { class: className, credits, grade } = classInfo;
 
       // Check if the class has a specific prefix
-      if ((className.startsWith('CSC') || className.startsWith('CS') || className.startsWith('CISC')|| className.startsWith('MTH')|| className.startsWith('MAT')) 
-          || className.startsWith('MATH')&& grade != "CR" )
+      if ((className.startsWith('CSC') || className.startsWith('CS') || className.startsWith('CISC')|| className.startsWith('MTH')|| className.startsWith('MAT') || className.startsWith('MATH')) 
+      && grade != "CR" &&  grade != "Contact")
         {
         const classGPA = calculateGPA(grade);
         const classCredits = parseFloat(credits);
-        console.log(className,classGPA,classCredits);
+        //console.log(className,classGPA,classCredits);
 
         totalGPA += classGPA * classCredits;
         totalCredits += classCredits;
       }
     });
+
+    //console.log("credit", totalCredits)
+    //console.log("credit", totalGPA)
 
     // Calculate average GPA
     const averageGPA = totalCredits > 0 ? totalGPA / totalCredits : 0.0;
@@ -134,8 +152,11 @@ function App() {
             //   If file exists then we will call our function
             if (file) {
               extractTextFromPDF(file).then((data) => {
-                setFileName(file.name)
                 const result = extractClassesCreditsGrades(data);
+                if(!result)
+                  return
+
+                setFileName(file.name)
                 console.log(result);
                 const avgGPA = calculateAverageGPA(result.classes);
                 console.log('Average GPA for CSC, CS, CISC classes:', avgGPA);
@@ -148,15 +169,14 @@ function App() {
             }
           }}
         />
-      </label>
-      {collegename + "College"}    
-      {averageGPA && <GpaScore averageGPA={averageGPA} />}
+      </label> 
+
+      {averageGPA !== 0 && <GpaScore averageGPA={averageGPA} college={collegename} />}
+
       <div>Average GPA for CSC, CS, CISC, MTH, MATH, MAT classes: {averageGPA}</div>
       {cumulativetot}
-      {allclasses.map(item => {
-        if (item?.class.match("(CS|CISC|MTH|MAT|CSC).*"))
-          return <div>{item?.class} {item?.description} {item?.credits} {item?.grade}</div>;
-        })}
+
+      {allclasses.length && <AllClassContainer allClasses={allclasses} />}
       
     </div>
   );
