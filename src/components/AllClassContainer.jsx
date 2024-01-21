@@ -1,11 +1,26 @@
-import React from 'react'
+import React, { useState } from 'react'
 import SingleClassContainer from './SingleClassContainer';
 
 const AllClassContainer = (props) => {
-    var classColor = true
+    const [majorClasses, setMajorClasses] = useState(true)
+
+    function handleMajorButton() {
+        setMajorClasses(true)
+    }
+
+    function handleAllButton() {
+        setMajorClasses(false)
+    }
+
+
 
   return (
     <div className="AllClassContainer">
+
+        <div className='classButtons'>
+            <button className={ majorClasses ? 'active' : 'notActive' } onClick={handleMajorButton}>Major Classes</button>
+            <button className={ majorClasses ? 'notActive' : 'active' } onClick={handleAllButton}>All Classes</button>
+        </div>
         
         {/* classHeader */}
         <div className="class1 classHeader" style={{padding:'5px', minHeight:0}}>
@@ -15,16 +30,40 @@ const AllClassContainer = (props) => {
             <div className='class_grade'>GRADE</div>
         </div>
 
-        {/* list of classes */}
-        {props.allClasses.map(item => {
+
+
+        {/* list of major classes */}
+        {majorClasses && props.allClasses.map(item => {
             if (item?.class.match("(CS|CISC|MTH|MAT|CSC).*")){
-                classColor = !classColor
                 return <SingleClassContainer 
                     class={item?.class} 
                     description={item?.description} 
                     credits={item?.credits} 
                     grade={item?.grade}
-                    cssClass={classColor ? 'class1' : 'class2'}
+                    cssClass={item.class.match("(MTH|MAT).*") ? 'class1' : 'class2'}
+
+                    />
+            }
+        })}
+
+        {/* list of all classes, only show if all class button is click */}
+        {!majorClasses && props.allClasses.map(item => {
+            if (item?.class.match("(CS|CISC|MTH|MAT|CSC).*")){
+                return <SingleClassContainer 
+                    class={item?.class} 
+                    description={item?.description} 
+                    credits={item?.credits} 
+                    grade={item?.grade}
+                    cssClass={item.class.match("(MTH|MAT).*") ? 'class1' : 'class2'}
+
+                    />
+            } else {
+                return <SingleClassContainer 
+                    class={item?.class} 
+                    description={item?.description} 
+                    credits={item?.credits} 
+                    grade={item?.grade}
+                    cssClass={'class3'}
 
                     />
             }

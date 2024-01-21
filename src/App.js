@@ -1,5 +1,6 @@
 import './App.css';
-import React, { useState } from 'react';
+import React, { useState, PureComponent, Fragment } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 import extractTextFromPDF from "pdf-parser-client-side";
 
@@ -14,6 +15,9 @@ function App() {
   const [fileName, setFileName] = useState("")
   const [collegename, setCollegename] = useState("")
   const [cumulativetot, setCumlativetot] = useState("")
+  const [studentName,setStudentName]=useState("None");
+  const [chart,setChart]=useState([])
+  const ChartClasses=[];
 
   // regEx pattern to match and push into array
   // [A-Z]+ -> 1 or more char from A-Z, 
@@ -25,15 +29,17 @@ function App() {
   // (\d+\.\d+) -> one or more digit + . + one or more digit
   // \s+
   // (\w+) -> one or more char(a-z, A-Z, 1-9, and _ )
-
   const classPattern = /\b([A-Z]+\.?\s\d+)\s+(.+?)\s+(\d+\.\d+)\s+(\w+\+?\-?)/g;
   const cumulativeTotalsPattern = /Cumulative Totals.*?Cum GPA:\s+(\d+\.\d+)\s+.*?Cum Total:\s+(\d+\.\d+)\s+(\d+\.\d+)/s;
 
   function extractClassesCreditsGrades(data) {
     // cut off everything before "Beginning of Undergraduate Record"
     const data2 = data.split("Beginning of Undergraduate Record")
-    console.log(data.split("Beginning of Undergraduate Record")[0])
-    console.log(data2)
+    const nameRegex = /Name:\s+(.*)\s+Student ID:/;
+    const matchName = data2[0].match(nameRegex);
+    const studentName = matchName && matchName[1];
+    setStudentName(studentName);
+
     const classes = [];
     let match;
     const collegeMatch = /\b(Brooklyn|Medgar Evers|COSI) Student\b/g.exec(data2[0])
@@ -45,7 +51,7 @@ function App() {
         case 'COSI':
           setCollegename("College Of Staten Island")
           break;
-          
+
         default:
           setCollegename(collegeMatch[1]+" College")
       }
@@ -66,6 +72,11 @@ function App() {
     setCumlativetot(cumGPA)
 
     return { classes, cumulativeTotals: { cumGPA, cumTotal, transferTotal } };
+  }
+
+  function arrayADD( Cname, Cgpa , Cgpa2 ){
+    const obj={name:Cname,avg:Cgpa,score:Cgpa2}
+    ChartClasses.push(obj);
   }
 
   // Function to calculate GPA from letter grade
@@ -119,6 +130,7 @@ function App() {
 
         totalGPA += classGPA * classCredits;
         totalCredits += classCredits;
+        arrayADD(className,parseFloat((totalGPA / totalCredits).toFixed(2)), parseFloat(classGPA.toFixed(2)))
       }
     });
 
@@ -127,7 +139,8 @@ function App() {
 
     // Calculate average GPA
     const averageGPA = totalCredits > 0 ? totalGPA / totalCredits : 0.0;
-
+    console.log(ChartClasses)
+    setChart(ChartClasses);
     return averageGPA.toFixed(2); // Return average GPA rounded to 2 decimal places
   }
 
@@ -135,8 +148,6 @@ function App() {
     <div className='App'>
 
       <h1 className="Title">CUNY CS Major GPA Calculator</h1>
-      <h4 className="Note">Disclaimer: Only tested with the following CUNY's transcript</h4>
-      <h4 className="Note">(Brooklyn College, John Jay College, and Medgar Evers college)</h4>
       
       <label htmlFor="file-selector" className="file-selector"> 
         <div className="boxUL bold">Upload Transcript File (.pdf)</div>
@@ -153,13 +164,14 @@ function App() {
             if (file) {
               extractTextFromPDF(file).then((data) => {
                 const result = extractClassesCreditsGrades(data);
-                if(!result)
+                if(!result || !file.type.endsWith('pdf')){
+                  alert("Invalid File.\nPlease make sure the file you attempt to upload is a PDF file and a CUNY unofficial transcript.")
                   return
+                }
+                  
 
                 setFileName(file.name)
-                console.log(result);
                 const avgGPA = calculateAverageGPA(result.classes);
-                console.log('Average GPA for CSC, CS, CISC classes:', avgGPA);
                 setAverageGPA(avgGPA);
                 setallclasses(result.classes)
               
@@ -171,13 +183,43 @@ function App() {
         />
       </label> 
 
-      {averageGPA !== 0 && <GpaScore averageGPA={averageGPA} college={collegename} />}
-
-      <div>Average GPA for CSC, CS, CISC, MTH, MATH, MAT classes: {averageGPA}</div>
-      {cumulativetot}
-
-      {allclasses.length && <AllClassContainer allClasses={allclasses} />}
+      <h4 className="Note">Disclaimer: Only tested with the following CUNY transcript</h4>
+      <h4 className="Note">(Brooklyn College, College of Staten Island, and Medgar Evers college)</h4>
       
+
+      {averageGPA !== 0 && <GpaScore 
+        averageGPA={averageGPA} 
+        college={collegename} 
+        cumGPA={cumulativetot} 
+        studentName={studentName}
+          
+        />}
+
+      { allclasses.length > 0 && 
+        <Fragment>
+          <h3 style={{marginTop:"50px", marginBottom:"0"}}>Major Class Progression</h3>
+          <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center',marginTop:"2vh", padding:"10px 0 30px 0" }}>
+            <ResponsiveContainer width="95%" height={300}>
+              <LineChart
+                data={chart}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                style={{maxWidth:"90vw"}}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="avg" name='Average Grade' stroke="#8884d8" activeDot={{ r: 8 }} />
+                <Line type="monotone" dataKey="score" name='Class Grade' stroke="#028282" activeDot={{ r: 8 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </Fragment>
+      }
+        
+
+      {allclasses.length > 0 && <AllClassContainer allClasses={allclasses} />}
+
     </div>
   );
 }

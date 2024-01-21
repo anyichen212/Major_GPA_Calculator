@@ -20,16 +20,18 @@
 
 /* note designs */
 .Note {
-  color: rgb(2, 130, 130);
+  color: #028282;
   font-weight: normal;
 
   margin: 0;
+  margin-top: -4px;
 }
 
 /* page title */
 .Title {
-  margin: 0;
-  padding: 20px 5px;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 20px 5px 5px 5px;
 }
 
 /* file uploading button */
@@ -68,13 +70,34 @@ input[type="file"] {
 }
 
 .GpaScoreContainer {
-  /* background-color: bisque; */
+  background-color: #4074af30;
+  border-radius: 20px;
+  margin: 20px auto;
+  padding: 20px 10px;
+  width: 50%;
+}
+
+.GpaScoreContainer > h3 {
+  margin: 0 auto;
+}
+
+.studentName {
+  color:#028282;
+}
+
+.college {
+  margin-bottom: 3px;
 }
 
 .MajorGPAScore{
-  font-size: xx-large;
+  color: #4074af;
+  font-size: 45px;
   font-weight: bolder;
-  margin: 10px;
+  margin: 5px;
+}
+
+.cumGPA{
+  color: #4074af;
 }
 
 /* class containers */
@@ -83,9 +106,10 @@ input[type="file"] {
   flex-direction: column;
   width: 80%;
   margin: auto;
+  padding-bottom: 35px;
 }
 
-.class1, .class2 {
+.class1, .class2, .class3 {
   display: flex;
   font-size: large;
   padding: 10px 5px;
@@ -101,6 +125,11 @@ input[type="file"] {
 
 .class2 {
   background-color: #9db1d4;
+}
+
+.class3 {
+  background-color: #028282;
+  color:#c6d5f0
 }
 
 .class_name {
@@ -129,13 +158,55 @@ input[type="file"] {
   display: none;
 }
 
+.classButtons > button {
+  cursor: pointer;
+  font-size: medium;
+  font-weight: bold;
+  height: 50px;
+  width: 30%;
+  margin: 10px 20px;
+  border: 3px double #122e4f;
+  border-radius: 10px;
+
+}
+
+.notActive {
+  background-color: #4074af;
+  color: #c6d5f0;
+}
+
+.notActive:hover {
+  background-color: #9db1d4;
+  color: #122e4f;
+}
+
+.active {
+  background-color: #028282;
+  color: #ecf1f3;
+}
+
 /* mobile design */
 @media only screen and (max-width: 600px) {
+
+  .classButtons{
+    display: flex;
+    justify-content: center;
+  }
+
+  .classButtons > button {
+    width: 45%;
+    margin: 10px 5px;
+  }
+
+  .GpaScoreContainer {
+    width: 80%;
+  }
+
   .classHeader {
     display: none;
   }
 
-  .class1, .class2 {
+  .class1, .class2, .class3 {
     flex-wrap: wrap;
   }
 
@@ -174,8 +245,9 @@ input[type="file"] {
 .Footer{
   text-align: right;
   padding: 10px 20px;
-  background-color: black;
+  background-color: #122e4f;
   color: aliceblue;
   height: 30px;
   width: calc(100% - 40px);
+  border-top: 5px double #4074af;
 }
